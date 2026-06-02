@@ -4,3 +4,5 @@ plotly
 google-genai
 python-docx
 openpyxl
+docx2pdf
+pywin32
