@@ -44,7 +44,7 @@ if st.button("Enviar Correo de Prueba"):
     
     try:
         # Reemplaza con tus datos reales para probar en internet
-        enviar_correo_nube("norbilllumpo346@gmail.com", "ytgo xaac rsyo tvtm", "norbilllumpo346@gmail.com", "Alfa", archivo_prueba)
+        enviar_correo_nube("norbilllumpo346@gmail.com", "rmnm zpqj jqpc xbzn", "norbilllumpo346@gmail.com", "Alfa", archivo_prueba)
         st.success("✅ ¡Correo despachado con éxito desde la nube!")
     except Exception as e:
         st.error(f"Error al enviar: {e}")
