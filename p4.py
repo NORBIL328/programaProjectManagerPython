@@ -9,8 +9,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
-# Importación clásica y ultra-estable de Gemini
-import google.generativeai as genai
+# Importación del nuevo SDK unificado de Google
+from google import genai
 
 # ==========================================
 # 1. FUNCIÓN DE CORREO CLOUD-SAFE (Envia .docx usando MIME)
@@ -49,9 +49,10 @@ st.caption("Despliegue Público: Dashboards Interactivos, Consultor IA y Despach
 st.sidebar.header("🔑 1. Credenciales IA")
 api_key = st.sidebar.text_input("Ingresa tu Gemini API Key:", type="password")
 
+client = None
 if api_key:
-    # Configuración clásica de la API
-    genai.configure(api_key=api_key)
+    # Instanciamos el cliente con el nuevo SDK
+    client = genai.Client(api_key=api_key)
     st.sidebar.success("✅ Conexión con Gemini lista.")
 else:
     st.sidebar.warning("⚠️ Introduce la API Key para habilitar la IA.")
@@ -120,15 +121,17 @@ if archivo_cargado is not None:
         )
         
         if st.button("🤖 Generar Informe con IA"):
-            if not api_key:
+            if not client:
                 st.error("Configura tu API Key en la barra lateral.")
             else:
                 with st.spinner("Redactando informe ejecutivo..."):
                     prompt = f"Analiza esta matriz de tareas de proyecto: \n{df_proyecto.to_string(index=False)}\nGenera un diagnóstico enfocado en: {opcion_analisis}. Sé conciso y usa viñetas."
                     try:
-                        # Ejecución CLÁSICA de Gemini (A prueba de errores)
-                        modelo_ia = genai.GenerativeModel("gemini-1.5-flash")
-                        response = modelo_ia.generate_content(prompt)
+                        # Lógica del nuevo SDK (google-genai)
+                        response = client.models.generate_content(
+                            model="gemini-2.5-flash",
+                            contents=prompt
+                        )
                         st.session_state['reporte_ia'] = response.text
                     except Exception as e:
                         st.error(f"Error de API: {e}")
