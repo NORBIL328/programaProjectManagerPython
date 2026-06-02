@@ -9,15 +9,14 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
-# Importación para la conversión a PDF
+# Importación exclusiva para la conversión a PDF
 from docx2pdf import convert
-import pythoncom  # Crítico para que docx2pdf funcione con Streamlit
 
 # Importación del nuevo SDK unificado de Google
 from google import genai
 
 # ==========================================
-# 1. FUNCIÓN DE CORREO (Envia .pdf usando MIME)
+# 1. FUNCIÓN DE CORREO CLOUD-SAFE (Envia .pdf usando MIME)
 # ==========================================
 def despachar_correo_pdf(remitente, password, destinatario, proyecto, ruta_pdf):
     """Despacha el archivo PDF final generado por docx2pdf."""
@@ -26,7 +25,7 @@ def despachar_correo_pdf(remitente, password, destinatario, proyecto, ruta_pdf):
     msg['From'] = remitente
     msg['To'] = destinatario
     
-    cuerpo = f"Estimados,\n\nAdjunto sírvase encontrar el reporte automatizado (.pdf) con el avance físico y financiero del proyecto {proyecto}.\n\nAtentamente,\nPM Copilot System"
+    cuerpo = f"Estimados,\n\nAdjunto sírvase encontrar el reporte automatizado (.pdf) con el avance físico y financiero del proyecto {proyecto}.\n\nAtentamente,\nPM Copilot en la Nube"
     msg.attach(MIMEText(cuerpo, 'plain'))
     
     with open(ruta_pdf, "rb") as f:
@@ -45,7 +44,7 @@ def despachar_correo_pdf(remitente, password, destinatario, proyecto, ruta_pdf):
 st.set_page_config(page_title="PM Copilot Cloud", page_icon="☁️", layout="wide")
 
 st.title("☁️ Portafolio Inteligente & Centro de Automatización")
-st.caption("Despliegue: Dashboards Interactivos, Consultor IA y Despacho en PDF")
+st.caption("Despliegue Público: Dashboards Interactivos, Consultor IA y Despacho en PDF")
 
 # ==========================================
 # 3. SEGURIDAD Y CREDENCIALES (BARRA LATERAL)
@@ -55,7 +54,7 @@ api_key = st.sidebar.text_input("Ingresa tu Gemini API Key:", type="password")
 
 client = None
 if api_key:
-    # Instanciamos el cliente con el nuevo SDK de manera segura
+    # Instanciamos el cliente con el nuevo SDK
     try:
         client = genai.Client(api_key=api_key)
         st.sidebar.success("✅ Conexión con Gemini lista.")
@@ -102,12 +101,14 @@ if archivo_cargado is not None:
     with tab1:
         st.subheader(f"Dashboard de Salud Financiera: {hoja_seleccionada}")
         
+        # Tarjetas de métricas rápidas
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Valor Planificado (PV)", f"${total_pv:,.2f}")
         col2.metric("Costo Real (AC)", f"${total_ac:,.2f}")
         col3.metric("Valor Ganado (EV)", f"${total_ev:,.2f}")
         col4.metric("CPI Global", f"{cpi_global:.2f}", delta="Sobrecosto" if cpi_global < 1 else "Saludable", delta_color="inverse")
         
+        # Gráfico Plotly interactivo
         df_plot = pd.DataFrame({
             "Métrica": ["PV (Planificado)", "AC (Real)", "EV (Ganado)"],
             "Monto": [total_pv, total_ac, total_ev]
@@ -132,7 +133,6 @@ if archivo_cargado is not None:
                 with st.spinner("Redactando informe ejecutivo..."):
                     prompt = f"Analiza esta matriz de tareas de proyecto: \n{df_proyecto.to_string(index=False)}\nGenera un diagnóstico enfocado en: {opcion_analisis}. Sé conciso y usa viñetas."
                     try:
-                        # Lógica CORRECTA del nuevo SDK (google-genai)
                         response = client.models.generate_content(
                             model="gemini-2.5-flash",
                             contents=prompt
@@ -169,9 +169,6 @@ if archivo_cargado is not None:
                     dict_proyectos = pd.read_excel(archivo_cargado, sheet_name=None)
                     
                     try:
-                        # 🛑 Crítico para que MS Word (docx2pdf) no colapse en los hilos de Streamlit
-                        pythoncom.CoInitialize()
-                        
                         for hoja, df_hoja in dict_proyectos.items():
                             status_bar.write(f"⚙️ Procesando métricas para: **{hoja}**")
                             
@@ -211,26 +208,4 @@ if archivo_cargado is not None:
                             correo_destino = lista_distribucion.get(hoja, correo_emisor)
                             status_bar.write(f"📧 Despachando PDF a: `{correo_destino}`")
                             try:
-                                despachar_correo_pdf(correo_emisor, clave_app, correo_destino, hoja, nombre_pdf)
-                            except Exception as e:
-                                status_bar.write(f"❌ Error enviando correo: {e}")
-                                
-                            # 4. Limpieza de archivos temporales
-                            if os.path.exists(nombre_docx): os.remove(nombre_docx)
-                            if os.path.exists(nombre_pdf): os.remove(nombre_pdf)
-                        
-                        # Liberamos la memoria de Windows
-                        pythoncom.CoUninitialize()
-                        
-                        status_bar.update(label="🏆 ¡Generación PDF y Despacho Masivo Completados!", state="complete", expanded=False)
-                        st.balloons()
-                        
-                    except Exception as ex:
-                        status_bar.update(label="❌ Error durante la automatización.", state="error")
-                        st.error(f"Detalle técnico: {ex}")
-                        try:
-                            pythoncom.CoUninitialize()
-                        except: pass
-
-else:
-    st.info("ℹ️ Sube un archivo Excel maestro para iniciar el despliegue del portafolio.")
+                                despachar_correo_pdf(correo_emisor, clave_app, correo_destino, hoja,
