@@ -208,4 +208,20 @@ if archivo_cargado is not None:
                             correo_destino = lista_distribucion.get(hoja, correo_emisor)
                             status_bar.write(f"📧 Despachando PDF a: `{correo_destino}`")
                             try:
-                                despachar_correo_pdf(correo_emisor, clave_app, correo_destino, hoja,
+                                despachar_correo_pdf(correo_emisor, clave_app, correo_destino, hoja, nombre_pdf)
+                            except Exception as e:
+                                status_bar.write(f"❌ Error enviando correo: {e}")
+                                
+                            # 4. Limpieza de archivos temporales
+                            if os.path.exists(nombre_docx): os.remove(nombre_docx)
+                            if os.path.exists(nombre_pdf): os.remove(nombre_pdf)
+                        
+                        status_bar.update(label="🏆 ¡Generación PDF y Despacho Masivo Completados!", state="complete", expanded=False)
+                        st.balloons()
+                        
+                    except Exception as ex:
+                        status_bar.update(label="❌ Error durante la automatización.", state="error")
+                        st.error(f"Detalle técnico: {ex}")
+
+else:
+    st.info("ℹ️ Sube un archivo Excel maestro para iniciar el despliegue del portafolio.")
